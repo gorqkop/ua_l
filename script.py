@@ -48,9 +48,8 @@ class Syllabys:
         self.snr = list('вмнлрй')
         self.glsn = list('іїиеєаяоую')
 
-    def tokenize(self, file_name):
-        file = open(file_name, encoding='utf-8').read().lower()
-        file = re.sub('[0-9A-zь\'\"`’]', '', file)
+    def tokenize(self, text):
+        file = re.sub('[0-9A-zь\'\"`’]', '', text.lower())
         return re.findall('\w+', file)
 
     def sklady(self, word):
@@ -61,7 +60,7 @@ class Syllabys:
             word = word[1:]
         if all(i not in self.glsn for i in word):
             return skl+word
-        elif skl in self.glsn:
+        elif skl in self.glsn and word[0] not in self.glsn:
             skl += word[0]+'-'+self.sklady(word[1:])
         elif len(word) <= 1:
             return skl+word
@@ -83,10 +82,9 @@ class Syllabys:
                     end = re.split(str('|'.join(self.glsn)), skl.replace('-', ''))[-1]
                     skl = skl[:-len(end)]
                     if end[0] in self.snr:
-                        while len(end)>0 and end[0] in self.snr:
+                        while len(end)>0 and end[0] in self.snr and not skl.endswith('й'):
                             skl += end[0]
                             end = end[1:]
-                            if skl.endswith('й'): break
                         skl += '-'+self.sklady(end+word)
                     else:
                         if len(end) == 3 and end[-1] in self.snr and (all(i in self.glh for i in end[:-1]) or all(i in self.dzv for i in end[:-1])):
@@ -113,4 +111,4 @@ class Syllabys:
         return skl
 
     def syllabyze(self, word):
-        return self.sklady(word).split('-')
+        return self.sklady(re.sub('[ь\'\"`’]', '', word)).split('-')
